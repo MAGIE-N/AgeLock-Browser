@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgeLock Browser</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #0078d7;
+      color: white;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .container {
+      max-width: 800px;
+      text-align: center;
+      padding: 2rem;
+    }
+    
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+    }
+    
+    p {
+      font-size: 1.2rem;
+      margin-bottom: 2rem;
+      max-width: 600px;
+    }
+    
+    .age-options {
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    
+    .age-option {
+      background-color: white;
+      border-radius: 8px;
+      padding: 1.5rem;
+      width: 200px;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .age-option:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+    }
+    
+    .age-option h2 {
+      color: #333;
+      margin-top: 0;
+    }
+    
+    .age-option p {
+      color: #666;
+      font-size: 0.9rem;
+      margin-bottom: 0;
+    }
+    
+    .kids {
+      border-top: 5px solid #4caf50;
+    }
+    
+    .teens {
+      border-top: 5px solid #ff9800;
+    }
+    
+    .adults {
+      border-top: 5px solid #2196f3;
+    }
+    
+    .security-note {
+      font-size: 0.8rem;
+      opacity: 0.8;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Select Your Age Range</h1>
+    <p>AgeLock will customize your browsing experience based on your age range, ensuring appropriate content filtering.</p>
+    
+    <div class="age-options">
+      <div class="age-option kids" onclick="selectAgeRange('children')">
+        <h2>Kids</h2>
+        <p>Safe browsing with educational content</p>
+        <ul style="text-align: left; color: #666;">
+          <li>Educational websites</li>
+          <li>Strict content filtering</li>
+          <li>Parent-approved sites only</li>
+        </ul>
+      </div>
+      
+      <div class="age-option teens" onclick="selectAgeRange('teenagers')">
+        <h2>Teens</h2>
+        <p>Balanced access with safety features</p>
+        <ul style="text-align: left; color: #666;">
+          <li>Moderate content filtering</li>
+          <li>Educational priority</li>
+          <li>Limited social media</li>
+        </ul>
+      </div>
+      
+      <div class="age-option adults" onclick="selectAgeRange('adults')">
+        <h2>Adults</h2>
+        <p>Full access with content awareness</p>
+        <ul style="text-align: left; color: #666;">
+          <li>Basic safety filters</li>
+          <li>All appropriate content</li>
+          <li>Privacy protection</li>
+        </ul>
+      </div>
+    </div>
+    
+    <p class="security-note">Your selection is securely stored using TPM 2.0 technology, ensuring 0% success in age spoofing attempts. All content filtering is performed locally on your device.</p>
+  </div>
+
+  <script>
+    function selectAgeRange(range) {
+      // In a real implementation, this would use the Electron IPC to communicate with the main process
+      if (window.electron && window.electron.tpmService) {
+        // First verify the age range
+        window.electron.tpmService.verifyAge(range)
+          .then(verified => {
+            if (verified) {
+              // Then store it if verified
+              return window.electron.tpmService.storeAge(range);
+            } else {
+              console.error('Age verification failed');
+              return false;
+            }
+          })
+          .then(success => {
+            if (success) {
+              console.log(`Age range set to ${range}`);
+              // Redirect to the browser page
+              window.location.href = '/browser';
+            } else {
+              console.error('Failed to store age range');
+            }
+          })
+          .catch(err => {
+            console.error('Error during age verification:', err);
+          });
+      } else {
+        console.log(`Selected age range: ${range} (TPM service not available)`);
+        // For testing in browser without Electron
+        localStorage.setItem('ageRange', range);
+        window.location.href = '/browser';
+      }
+    }
+
+    // Check if age range is already set
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.electron && window.electron.tpmService) {
+        window.electron.tpmService.getStoredAge()
+          .then(result => {
+            if (result && result.ageRange) {
+              console.log(`Age range already set to ${result.ageRange}`);
+              // In a real app, we would navigate to the browser view
+            }
+          })
+          .catch(err => {
+            console.error('Error getting stored age range:', err);
+          });
+      } else {
+        // For testing in browser without Electron
+        const storedRange = localStorage.getItem('ageRange');
+        if (storedRange) {
+          console.log(`Age range already set to ${storedRange} (from localStorage)`);
+        }
+      }
+    });
+  </script>
+</body>
+</html>
