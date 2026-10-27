@@ -306,4 +306,4 @@ AgeLock does not collect browsing history, does not use persistent identifiers, 
 
 ## License
 
-Add a license (e.g. MIT) before publishing.
+licensed under the [MIT License](LICENSE).
